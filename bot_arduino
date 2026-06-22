@@ -1,0 +1,78 @@
+#define ESP_SIGNAL_PIN 5   // Signal pin from ESP32 (GPIO14 → D7)
+
+// Motor driver connections
+#define IN1 8   // Left motor input 1
+#define IN2 9   // Left motor input 2
+#define IN3 10  // Right motor input 1
+#define IN4 11  // Right motor input 2
+
+// Ultrasonic senor pins
+#define TRIG_PIN 6
+#define ECHO_PIN 7
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(ESP_SIGNAL_PIN, INPUT);
+
+  // Motor pins as output
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+
+  // Ultrasonic pins
+  pinMode(TRIG_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
+
+  stopMotors();  // Initially stop motors
+}
+
+void loop() {
+  int signal = digitalRead(ESP_SIGNAL_PIN);
+  float distance = getDistance();  // Read ultrasonic distance
+
+  Serial.print("ESP32 Signal: ");
+  Serial.print(signal == HIGH ? "Object Detected" : "No Object");
+  Serial.print(" | Distance: ");
+  Serial.print(distance);
+  Serial.println(" cm");
+
+  // ✅ Motor should run only when both conditions are true
+  if (signal == HIGH && distance > 3.0) {
+    moveForward();
+    //stopMotors();
+  } 
+  else {
+    //moveForward();
+    stopMotors();
+  }
+
+  delay(1000);
+}
+
+// Function to measure distance using ultrasonic sensor
+float getDistance() {
+  digitalWrite(TRIG_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIG_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIG_PIN, LOW);
+
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  float distance = (duration * 0.0343) / 2;  // cm
+  return distance;
+}
+
+void moveForward() {
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+}
+
+void stopMotors() {
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+}
